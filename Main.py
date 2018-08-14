@@ -296,7 +296,7 @@ def getTotalMark(studentanswer,correctanswer,bil):
  _____/ \__| \__,_| _|   \__|    _|    _|  \___/ \___| \___| ____/ ____/    _/    _\ _|  _| ____/   \_/\_/ \___| _|    
                                                                                                                        
 """
-StudentId= "2017123456"
+StudentId= ["2017123456"]
 ABCDvalue = {0:'A',1:'B',2:'C',3:'D',4:'E',99:'Error'}
 CorrectAnswer = [1,0,3,2,2,3,0,2,2,0,2,1,1,0,2,0,3,1,3,1] #modify this so examiner can submit the answer
 
@@ -334,14 +334,16 @@ for i in range(2):
 	ansnum.extend(partans)
 	
 
+score = []
 print("\nStudent Answers'")
 if len(ansnum) > 0:
-	score = getTotalMark(ansnum,CorrectAnswer,bil)
+	score.append(getTotalMark(ansnum,CorrectAnswer,bil))
 	print("Score",score)
 	for i in range(bil):
 		print(i+1,ABCDvalue[ansnum[i]])
 
-	
+df = DataFrame({'Student ID': StudentId, 'Score': score})
+df.to_excel('Score.xls', sheet_name='sheet1', index=False)
 
 	
 	
