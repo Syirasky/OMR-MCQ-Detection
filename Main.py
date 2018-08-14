@@ -1,3 +1,20 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#  
+#  Copyright 2018 Syirasky <Syirasky@DESKTOP-17Q7VC8>
+#  
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
+#  
+#  
+
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -6,7 +23,7 @@ from imutils import contours
 import math
 import imutils
 import time
-
+from pandas import DataFrame
 
 
 def doMorphologyEx(im,method,kern):
@@ -140,13 +157,6 @@ def divideSection(bubbleregion):
 	return sect
 
 
-"""
-   ___|  |                |        _ \                                          \                                      
- \___ \  __|   _` |   __| __|     |   |  __| _ \   __|   _ \   __|   __|       _ \    __ \    __| \ \  \   / _ \   __| 
-       | |    (   |  |    |       ___/  |   (   | (      __/ \__ \ \__ \      ___ \   |   | \__ \  \ \  \ /  __/  |    
- _____/ \__| \__,_| _|   \__|    _|    _|  \___/ \___| \___| ____/ ____/    _/    _\ _|  _| ____/   \_/\_/ \___| _|    
-                                                                                                                       
-"""
 
 def findBubble(img):
 	# [FIND] find contours here after process
@@ -264,28 +274,52 @@ def findIdContour(img):
 			filtered_cnts.append(i)
 	return cnts
 	
+def resizeimage(image):
+	print("image shape height, width, channel", image.shape)
+	r = 360 / image.shape[1]
+	dim = (360, int(image.shape[0] * r ))
+	image2 = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
+	return image2
 	
+def getTotalMark(studentanswer,correctanswer,bil):
+	score = 0
+
+	for i in range(bil):
+		if studentanswer[i]==correctanswer[i]:
+			score = 1 + score
+	return score
+	
+"""
+   ___|  |                |        _ \                                          \                                      
+ \___ \  __|   _` |   __| __|     |   |  __| _ \   __|   _ \   __|   __|       _ \    __ \    __| \ \  \   / _ \   __| 
+       | |    (   |  |    |       ___/  |   (   | (      __/ \__ \ \__ \      ___ \   |   | \__ \  \ \  \ /  __/  |    
+ _____/ \__| \__,_| _|   \__|    _|    _|  \___/ \___| \___| ____/ ____/    _/    _\ _|  _| ____/   \_/\_/ \___| _|    
+                                                                                                                       
+"""
+StudentId= "2017123456"
 ABCDvalue = {0:'A',1:'B',2:'C',3:'D',4:'E',99:'Error'}
+CorrectAnswer = [1,0,3,2,2,3,0,2,2,0,2,1,1,0,2,0,3,1,3,1] #modify this so examiner can submit the answer
+
 # [EDIT] edit here if change to other dir or run from other computers
-imagepath="D:\\A-DEGREE\\Final Year Project\\DEVELOPMENT\\uitmOMRdetect\\StudentAnswers\\"
-savebubbleregion = "D:\\A-DEGREE\\Final Year Project\\DEVELOPMENT\\uitmOMRdetect\\StudentAnswers\\BubbleRegion\\"
-saveidregion = "D:\\A-DEGREE\Final Year Project\\DEVELOPMENT\\uitmOMRdetect\\StudentAnswers\\StudentIdRegion\\"
+imagepath="D:\\A-DEGREE\\Final Year Project\\DEVELOPMENT\\OMR-MCQ-Detection\\StudentAnswers\\"
+savebubbleregion = "D:\\A-DEGREE\\Final Year Project\\DEVELOPMENT\\OMR-MCQ-Detection\\StudentAnswers\\BubbleRegion\\"
+saveidregion = "D:\\A-DEGREE\Final Year Project\\DEVELOPMENT\\OMR-MCQ-Detection\\StudentAnswers\\StudentIdRegion\\"
 image = cv2.imread(imagepath+"newFullPage.jpg")
+bil = 20 #mod this because question numbers can be vary
 im2 = image.copy()
 kernel = np.ones((3, 3), np.uint8)
 
 
 # [NOTICE] nothing here only resize for viewing purpose
-print("image shape height, width, channel", image.shape)
-r = 360 / image.shape[1]
-dim = (360, int(image.shape[0] * r ))
-image2 = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
-bil = 20
+image2 = resizeimage(image)
 # done resize for view
 
+# [NOTICE] find paper
 cnts = findAllCnts(image)
-
 paper = findpaper(cnts)
+
+# [NOTICE] begin process on bubbleregion
+
 bubbleregion = getbubbleregion(paper,"test")
 sect = divideSection(bubbleregion)
 partans = []
@@ -299,17 +333,17 @@ for i in range(2):
 	partans = getBlackBubble(studentanswer,len(studentanswer))
 	ansnum.extend(partans)
 	
-	# [NOTICE] begin process on bubbleregion
 
 print("\nStudent Answers'")
-for i in range(bil):
-	print(i+1,ABCDvalue[ansnum[i]])
+if len(ansnum) > 0:
+	score = getTotalMark(ansnum,CorrectAnswer,bil)
+	print("Score",score)
+	for i in range(bil):
+		print(i+1,ABCDvalue[ansnum[i]])
 
-idimg = findIdRegion(cnts)
+	
 
-cv2.imwrite(saveidregion+"1.jpeg",idimg)
-idcnt = findIdContour(idimg)
-if len(idcnt)>0:
-	cv2.drawContours(idimg,idcnt,-1,255,0)
-	cv2.imshow("idimg",idimg)
+	
+	
+	
 cv2.waitKey(0)
